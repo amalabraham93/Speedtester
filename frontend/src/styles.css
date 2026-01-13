@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Gauge Animation or Global Styles */
+body {
+  font-family: 'Roboto', sans-serif;
+  @apply bg-slate-900 text-white;
+}
+
+.dark body {
+  @apply bg-gray-900 text-white;
+}

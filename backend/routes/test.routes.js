@@ -1,0 +1,60 @@
+const express = require('express');
+const router = express.Router();
+const TestResult = require('../models/TestResult');
+
+// Save Test Result
+router.post('/save', async (req, res) => {
+    try {
+        const { downloadSpeed, uploadSpeed, ping, jitter, isp, city, userId } = req.body;
+
+        const newTest = new TestResult({
+            userId: userId || null,
+            downloadSpeed,
+            uploadSpeed,
+            ping,
+            jitter,
+            isp,
+            city
+        });
+
+        await newTest.save();
+
+        // Emit real-time update
+        if (req.io) {
+            req.io.emit('new_test', { isp, downloadSpeed, city });
+        }
+
+        res.json(newTest);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get History (Latest 10)
+router.get('/history', async (req, res) => {
+    try {
+        const tests = await TestResult.find().sort({ timestamp: -1 }).limit(10);
+        res.json(tests);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get User History
+router.get('/user/:userId', async (req, res) => {
+    try {
+        const tests = await TestResult.find({ userId: req.params.userId }).sort({ timestamp: -1 });
+        res.json(tests);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Upload test endpoint (accepts dummy data for speed test)
+router.post('/upload', (req, res) => {
+    // We don't need to do anything with the data, just acknowledge it.
+    // The mere act of receiving it over the network measures the speed.
+    res.status(200).json({ message: 'Upload received' });
+});
+
+module.exports = router;
