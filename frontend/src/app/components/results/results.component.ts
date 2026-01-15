@@ -19,32 +19,32 @@ import { QualityService } from '../../services/quality.service';
 
       <div class="max-w-4xl w-full z-10 relative">
         <!-- Header -->
-        <h2 class="text-4xl font-display font-bold text-white mb-8 text-center tracking-widest drop-shadow-md">TEST RESULTS</h2>
+        <h2 class="text-2xl md:text-4xl font-display font-bold text-white mb-6 md:mb-8 text-center tracking-widest drop-shadow-md">TEST RESULTS</h2>
         
         <!-- Main Stats Card -->
-        <div class="glass-card mb-8 p-10 grid grid-cols-1 md:grid-cols-3 gap-8 text-center shadow-[0_0_50px_rgba(15,23,42,0.5)] bg-slate-800/80 backdrop-blur-xl rounded-3xl border border-slate-700">
-           <div class="relative group">
-             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Download</h3>
-             <p class="text-5xl font-display font-bold text-white group-hover:text-neon-cyan transition-colors duration-300 drop-shadow-[0_0_10px_rgba(0,242,254,0.3)]">
+        <div class="glass-card mb-6 md:mb-8 p-6 md:p-10 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-center shadow-[0_0_50px_rgba(15,23,42,0.5)] bg-slate-800/80 backdrop-blur-xl rounded-2xl md:rounded-3xl border border-slate-700">
+           <div class="relative group border-b md:border-b-0 md:border-r border-slate-700 pb-4 md:pb-0">
+             <h3 class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 md:mb-2">Download</h3>
+             <p class="text-4xl md:text-5xl font-display font-bold text-white group-hover:text-neon-cyan transition-colors duration-300 drop-shadow-[0_0_10px_rgba(0,242,254,0.3)]">
                  {{ result?.downloadSpeed | number:'1.1-1' }}
              </p>
-             <span class="text-slate-500 text-sm mt-1 block">Mbps</span>
+             <span class="text-slate-500 text-xs md:text-sm mt-1 block">Mbps</span>
            </div>
  
-           <div class="md:border-l md:border-r border-slate-700 px-4 relative group">
-             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Upload</h3>
-             <p class="text-5xl font-display font-bold text-white group-hover:text-neon-blue transition-colors duration-300 drop-shadow-[0_0_10px_rgba(47,128,237,0.3)]">
+           <div class="md:border-r border-slate-700 pb-4 md:pb-0 md:px-4 relative group border-b md:border-b-0">
+             <h3 class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 md:mb-2">Upload</h3>
+             <p class="text-4xl md:text-5xl font-display font-bold text-white group-hover:text-neon-blue transition-colors duration-300 drop-shadow-[0_0_10px_rgba(47,128,237,0.3)]">
                  {{ result?.uploadSpeed | number:'1.1-1' }}
              </p>
-             <span class="text-slate-500 text-sm mt-1 block">Mbps</span>
+             <span class="text-slate-500 text-xs md:text-sm mt-1 block">Mbps</span>
            </div>
  
            <div class="relative group">
-             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Ping</h3>
-             <p class="text-5xl font-display font-bold text-white group-hover:text-neon-purple transition-colors duration-300 drop-shadow-[0_0_10px_rgba(189,0,255,0.3)]">
+             <h3 class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 md:mb-2">Ping</h3>
+             <p class="text-4xl md:text-5xl font-display font-bold text-white group-hover:text-neon-purple transition-colors duration-300 drop-shadow-[0_0_10px_rgba(189,0,255,0.3)]">
                  {{ result?.ping | number:'1.0-0' }}
              </p>
-             <span class="text-slate-500 text-sm mt-1 block">ms</span>
+             <span class="text-slate-500 text-xs md:text-sm mt-1 block">ms</span>
            </div>
         </div>
 
@@ -57,7 +57,7 @@ import { QualityService } from '../../services/quality.service';
                     <span class="text-xs font-mono text-neon-cyan">AI ANALYSIS</span>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <!-- Browsing -->
                     <div class="p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition group">
                         <div class="flex items-center gap-3 mb-2">

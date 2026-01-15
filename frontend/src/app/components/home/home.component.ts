@@ -110,6 +110,13 @@ import { Subscription } from 'rxjs';
          <span class="opacity-30">|</span>
          <span class="hover:text-white transition-colors cursor-pointer">ENCRYPTED: TLS 1.3</span>
       </div>
+
+      <!-- Saving Overlay -->
+      <div *ngIf="isSaving" class="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex flex-col items-center justify-center animate-fade-in">
+          <div class="w-16 h-16 border-4 border-slate-700 border-t-neon-cyan rounded-full animate-spin mb-6 shadow-[0_0_30px_rgba(0,224,255,0.4)]"></div>
+          <h3 class="text-2xl font-display font-bold text-white tracking-widest animate-pulse">PROCESSING RESULTS</h3>
+          <p class="text-neon-cyan/70 font-mono text-sm mt-2">Encrypting & Saving to Cloud...</p>
+      </div>
     </div>
   `
 })
@@ -126,6 +133,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   currentSpeed = 0;
   currentMax = 100;
   ipInfo: any = {};
+  isSaving = false;
 
   private testSub: Subscription | null = null;
   private ipSub: Subscription | null = null;
@@ -174,6 +182,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       }
 
       if (state.phase === 'complete') {
+        this.isSaving = true; // Trigger loading overlay
         this.saveAndRedirect(state);
       }
     });
