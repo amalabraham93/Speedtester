@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface TestState {
     downloadSpeed: number; // Mbps
@@ -148,9 +149,9 @@ export class SpeedTestService {
             setTimeout(() => { keepGoing = false; }, TEST_DURATION);
 
             try {
-                // Use Cloudflare Speed Test Endpoint for realistic Internet speed
-                // Localhost will always return Loopback speed (~1Gbps+)
-                const uploadUrl = 'https://speed.cloudflare.com/__up';
+                // Revert to Backend Upload for CORS compatibility
+                // This tests speed to YOUR server (Render), which acts as the speed test server.
+                const uploadUrl = `${environment.apiUrl}/test/upload`;
 
                 while (keepGoing) {
                     await this.uploadChunk(uploadUrl, CHUNK_SIZE, startTime, totalLoaded);
