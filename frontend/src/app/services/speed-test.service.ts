@@ -72,13 +72,16 @@ export class SpeedTestService {
 
     private async measurePing(): Promise<{ ping: number, jitter: number }> {
         const pings = [];
+        // Use Cloudflare 0-byte endpoint for accurate internet latency
+        const pingUrl = 'https://speed.cloudflare.com/__down?bytes=0';
+
         for (let i = 0; i < 5; i++) {
             const start = performance.now();
             try {
-                await fetch(this.downloadUrl + '?t=' + Math.random(), { method: 'HEAD' });
+                await fetch(pingUrl, { method: 'HEAD', cache: 'no-store' });
                 const end = performance.now();
                 pings.push(end - start);
-            } catch (e) { pings.push(50); }
+            } catch (e) { pings.push(100); } // Default to 100 on error
         }
         const ping = pings.reduce((a, b) => a + b) / pings.length;
         const diffs = [];
@@ -145,8 +148,9 @@ export class SpeedTestService {
             setTimeout(() => { keepGoing = false; }, TEST_DURATION);
 
             try {
-                // Determine URL
-                const uploadUrl = 'http://localhost:5000/api/test/upload';
+                // Use Cloudflare Speed Test Endpoint for realistic Internet speed
+                // Localhost will always return Loopback speed (~1Gbps+)
+                const uploadUrl = 'https://speed.cloudflare.com/__up';
 
                 while (keepGoing) {
                     await this.uploadChunk(uploadUrl, CHUNK_SIZE, startTime, totalLoaded);

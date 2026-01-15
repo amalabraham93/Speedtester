@@ -1,13 +1,40 @@
 @tailwind base;
+/* Trigger Rebuild */
 @tailwind components;
 @tailwind utilities;
 
 /* Custom Gauge Animation or Global Styles */
+/* Global Styles */
 body {
-  font-family: 'Roboto', sans-serif;
-  @apply bg-slate-900 text-white;
+  font-family: 'Manrope', sans-serif;
+  @apply bg-slate-900 text-white overflow-x-hidden;
+  background: radial-gradient(circle at 50% 0%, #030B24 0%, #020615 100%);
 }
 
-.dark body {
-  @apply bg-gray-900 text-white;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Orbitron', sans-serif;
+}
+
+.glass {
+  @apply bg-white/5 backdrop-blur-xl border border-white/10;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(0, 224, 255, 0.5);
+}
+
+.neon-border {
+  box-shadow: 0 0 5px theme('colors.neon.cyan'), inset 0 0 5px theme('colors.neon.cyan');
 }

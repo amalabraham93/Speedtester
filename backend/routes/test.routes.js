@@ -57,4 +57,26 @@ router.post('/upload', (req, res) => {
     res.status(200).json({ message: 'Upload received' });
 });
 
+// Proxy IP Endpoint to avoid CORS
+router.get('/ip', async (req, res) => {
+    try {
+        // Dynamic import for fetch (node 18+) or use axios if available. 
+        // Using native fetch since Node 18+ is likely used.
+        const response = await fetch('https://ipapi.co/json/');
+        if (!response.ok) throw new Error('IP API Error');
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Primary IP API failed:', error.message);
+        try {
+            // Fallback to ipwho.is
+            const fallback = await fetch('https://ipwho.is/');
+            const data = await fallback.json();
+            res.json(data);
+        } catch (fbError) {
+            res.status(500).json({ error: 'Failed to fetch IP info' });
+        }
+    }
+});
+
 module.exports = router;

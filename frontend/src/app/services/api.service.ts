@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -13,7 +14,13 @@ export class ApiService {
 
     // Utils
     getIpInfo(): Observable<any> {
-        return this.http.get('https://ipapi.co/json/');
+        // Use our backend proxy to avoid CORS
+        return this.http.get(`${this.apiUrl}/test/ip`).pipe(
+            catchError(error => {
+                console.warn('Backend IP proxy failed, trying direct fallback', error);
+                return this.http.get('https://ipwho.is/');
+            })
+        );
     }
 
     // Auth
