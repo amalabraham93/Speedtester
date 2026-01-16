@@ -1,53 +1,126 @@
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs'); // Need to install bcryptjs? prompt said jsonwebtoken but user password safety needs hashing. I'll add bcryptjs to install or just use simple for now if not requested? Standard is bcrypt. I will Assume I can use it. But wait, I didn't install it. I'll use it and if it fails I'll install it.
-// Actually, prompt didn't ask for bcrypt explicitly but "User Auth". I'll add `bcryptjs` to the install command or just run `npm i bcryptjs` later.
-// For now, I will write code assuming it's available.
-
 const User = require('../models/User');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const auth = require('../middleware/auth');
+const { OAuth2Client } = require('google-auth-library');
+const config = require('../config/auth.config');
 
-const SECRET_KEY = process.env.JWT_SECRET || 'supersecretkey';
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Register
+// Generate JWT
+const generateToken = (userId) => {
+    return jwt.sign(
+        { user: { id: userId } },
+        config.jwtSecret,
+        { expiresIn: config.jwtExpire }
+    );
+};
+
+// @route   POST api/auth/register
+// @desc    Register user
+// @access  Public
 router.post('/register', async (req, res) => {
+    const { name, email, password } = req.body;
+
     try {
-        const { email, password, name } = req.body;
         let user = await User.findOne({ email });
-        if (user) return res.status(400).json({ msg: 'User already exists' });
+        if (user) {
+            return res.status(400).json({ msg: 'User already exists' });
+        }
 
-        // Hash password (pseudo-code if bcrypt not installed yet)
-        // const salt = await bcrypt.genSalt(10);
-        // const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Use plain text for now if bcrypt is missing, but TODO: Fix
-        const hashedPassword = password; // TEMPORARY for MVP speed if bcrypt fails
-
-        user = new User({ email, password: hashedPassword, name });
+        user = new User({ name, email, password });
         await user.save();
 
-        const token = jwt.sign({ id: user._id, isPremium: user.isPremium }, SECRET_KEY, { expiresIn: '1h' });
-        res.json({ token, user: { id: user._id, email: user.email, name: user.name, isPremium: user.isPremium } });
+        const token = generateToken(user.id);
+        res.json({ token, user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar } });
+
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err.message);
+        res.status(500).send('Server error');
     }
 });
 
-// Login
+// @route   POST api/auth/login
+// @desc    Authenticate user & get token
+// @access  Public
 router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+
     try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ msg: 'User not found' });
+        let user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ msg: 'Invalid Credentials' });
+        }
 
-        // Compare password
-        const isMatch = (password === user.password); // Simple compare for now
-        if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(400).json({ msg: 'Invalid Credentials' });
+        }
 
-        const token = jwt.sign({ id: user._id, isPremium: user.isPremium }, SECRET_KEY, { expiresIn: '1h' });
-        res.json({ token, user: { id: user._id, email: user.email, name: user.name, isPremium: user.isPremium } });
+        const token = generateToken(user.id);
+        res.json({ token, user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar } });
+
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// @route   POST api/auth/google
+// @desc    Google Login/Register
+// @access  Public
+router.post('/google', async (req, res) => {
+    const { token } = req.body;
+
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+        const { name, email, picture, sub } = ticket.getPayload();
+
+        let user = await User.findOne({ email });
+
+        if (user) {
+            // Update Google ID if not present (merging account)
+            if (!user.googleId) {
+                user.googleId = sub;
+                await user.save();
+            }
+        } else {
+            // Create new user
+            user = new User({
+                name,
+                email,
+                password: crypto.randomBytes(20).toString('hex'), // Random password for google users
+                googleId: sub,
+                avatar: picture
+            });
+            await user.save();
+        }
+
+        const jwtToken = generateToken(user.id);
+        res.json({ token: jwtToken, user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar } });
+
+    } catch (err) {
+        console.error('Google Auth Error:', err);
+        res.status(401).send('Google authentication failed');
+    }
+});
+
+// @route   GET api/auth/me
+// @desc    Get current user
+// @access  Private
+router.get('/me', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password');
+        res.json(user);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
     }
 });
 

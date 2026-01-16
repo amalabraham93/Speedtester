@@ -13,5 +13,7 @@ export const routes: Routes = [
         loadComponent: () => import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent)
         // canActivate: [AuthGuard]
     },
+    { path: 'login', loadComponent: () => import('./components/auth/login.component').then(m => m.LoginComponent) },
+    { path: 'register', loadComponent: () => import('./components/auth/register.component').then(m => m.RegisterComponent) },
     { path: '**', redirectTo: '' }
 ];

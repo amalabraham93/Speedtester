@@ -8,10 +8,12 @@ import { ApiService } from '../../services/api.service';
 import { SeoService } from '../../services/seo.service';
 import { Subscription } from 'rxjs';
 
+import { ProfileHeaderComponent } from '../auth/profile-header.component';
+
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, GaugeComponent, BackgroundComponent],
+  imports: [CommonModule, GaugeComponent, BackgroundComponent, ProfileHeaderComponent],
   template: `
     <div class="min-h-screen relative overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center p-4">
       <!-- Interactive Particle Background -->
@@ -27,15 +29,18 @@ import { Subscription } from 'rxjs';
            <div class="w-12 h-12 rounded-xl bg-slate-900/80 border border-slate-700/50 flex items-center justify-center shadow-[0_0_20px_rgba(0,224,255,0.1)] group-hover:shadow-[0_0_25px_rgba(0,224,255,0.3)] transition-all duration-300 backdrop-blur-md">
                <svg class="w-6 h-6 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
            </div>
-           <div>
-               <span class="block text-white font-display font-bold tracking-[0.2em] text-xl drop-shadow-md">SPEEDTRACK</span>
-               <span class="block text-[8px] text-neon-cyan tracking-[0.4em] uppercase opacity-70">Deep Analysis Protocol</span>
-           </div>
-        </div>
-        <div class="px-6 py-2 rounded-full bg-slate-900/40 border border-neon-cyan/20 backdrop-blur-md text-xs font-mono text-neon-cyan tracking-wider shadow-[0_0_15px_rgba(0,224,255,0.05)]">
-           <span class="opacity-70">CONN:</span> {{ ipInfo.city || 'SCANNING...' }} <span class="mx-2 text-slate-600">|</span> <span class="opacity-70">IP:</span> {{ ipInfo.ip || '---.---.---.---' }}
-        </div>
-      </div>
+            <div>
+                <span class="block text-white font-display font-bold tracking-[0.2em] text-xl drop-shadow-md">SPEEDTRACK</span>
+                <span class="block text-[8px] text-neon-cyan tracking-[0.4em] uppercase opacity-70">Deep Analysis Protocol</span>
+            </div>
+         </div>
+         <div class="flex items-center gap-4">
+             <app-profile-header></app-profile-header>
+             <div class="hidden md:block px-6 py-2 rounded-full bg-slate-900/40 border border-neon-cyan/20 backdrop-blur-md text-xs font-mono text-neon-cyan tracking-wider shadow-[0_0_15px_rgba(0,224,255,0.05)]">
+                <span class="opacity-70">CONN:</span> {{ ipInfo.city || 'SCANNING...' }} <span class="mx-2 text-slate-600">|</span> <span class="opacity-70">IP:</span> {{ ipInfo.ip || '---.---.---.---' }}
+             </div>
+         </div>
+       </div>
 
       <!-- Main Gauge Card (Deep Glass) -->
       <div class="bg-slate-900/60 backdrop-blur-[12px] p-12 rounded-[3.5rem] border border-neon-cyan/10 shadow-[0_0_60px_rgba(0,0,0,0.4)] w-full max-w-xl text-center relative z-10 transition-all duration-500 hover:border-neon-cyan/30 hover:shadow-[0_0_50px_rgba(0,224,255,0.15)] group">

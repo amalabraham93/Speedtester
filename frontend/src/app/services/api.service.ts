@@ -18,7 +18,23 @@ export class ApiService {
         return this.http.get(`${this.apiUrl}/test/ip`).pipe(
             catchError(error => {
                 console.warn('Backend IP proxy failed, trying direct fallback', error);
-                return this.http.get('https://ipwho.is/');
+                // Fallback and map to expected structure
+                return new Observable(observer => {
+                    fetch('https://ipwho.is/')
+                        .then(res => res.json())
+                        .then(data => {
+                            observer.next({
+                                ip: data.ip,
+                                city: data.city,
+                                region: data.region,
+                                country_name: data.country,
+                                org: data.connection?.isp || 'Unknown ISP',
+                                asn: data.connection?.asn
+                            });
+                            observer.complete();
+                        })
+                        .catch(err => observer.error(err));
+                });
             })
         );
     }
@@ -34,13 +50,15 @@ export class ApiService {
 
     // Tests
     saveTestResult(result: any): Observable<any> {
-        const token = localStorage.getItem('token');
-        const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-        return this.http.post(`${this.apiUrl}/test/save`, result, { headers });
+        return this.http.post(`${this.apiUrl}/test/save`, result);
     }
 
-    getHistory(): Observable<any[]> {
-        return this.http.get<any[]>(`${this.apiUrl}/test/history`);
+    getHistory(ip?: string): Observable<any[]> {
+        let url = `${this.apiUrl}/test/history`;
+        if (ip) {
+            url += `?ip=${ip}`;
+        }
+        return this.http.get<any[]>(url);
     }
 
     getUserHistory(userId: string): Observable<any[]> {

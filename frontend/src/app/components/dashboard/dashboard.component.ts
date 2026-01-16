@@ -4,11 +4,13 @@ import { RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import { BackgroundComponent } from '../background/background.component';
+import { ProfileHeaderComponent } from '../auth/profile-header.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, NgxChartsModule, BackgroundComponent, RouterLink],
+  imports: [CommonModule, NgxChartsModule, BackgroundComponent, RouterLink, ProfileHeaderComponent],
   template: `
     <div class="min-h-screen bg-slate-900 p-6 relative overflow-hidden">
        <app-background></app-background>
@@ -16,19 +18,24 @@ import { BackgroundComponent } from '../background/background.component';
       <div class="max-w-7xl mx-auto relative z-10">
         <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-10 gap-4">
-          <div>
-              <div class="flex items-center gap-3 mb-1">
-                 <a routerLink="/" class="flex items-center gap-2 group cursor-pointer hover:opacity-80 transition-opacity">
-                    <svg class="w-4 h-4 md:w-5 md:h-5 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                    <span class="text-neon-cyan font-mono text-[10px] md:text-xs uppercase tracking-widest">Back to Test</span>
-                 </a>
+          <div class="flex items-center gap-4">
+              <div>
+                  <div class="flex items-center gap-3 mb-1">
+                     <a routerLink="/" class="flex items-center gap-2 group cursor-pointer hover:opacity-80 transition-opacity">
+                        <svg class="w-4 h-4 md:w-5 md:h-5 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                        <span class="text-neon-cyan font-mono text-[10px] md:text-xs uppercase tracking-widest">Back to Test</span>
+                     </a>
+                  </div>
+                  <h1 class="text-2xl md:text-4xl font-display font-bold text-white tracking-widest drop-shadow-md">SPEED HISTORY</h1>
               </div>
-              <h1 class="text-2xl md:text-4xl font-display font-bold text-white tracking-widest drop-shadow-md">SPEED HISTORY</h1>
           </div>
           
-          <button (click)="exportCSV()" class="w-full md:w-auto px-5 py-2 md:px-6 md:py-3 bg-slate-800 border border-neon-blue/30 text-neon-blue text-sm md:text-base font-bold rounded-xl hover:bg-neon-blue hover:text-white transition-all shadow-[0_0_15px_rgba(0,114,255,0.2)] hover:shadow-[0_0_25px_rgba(0,114,255,0.5)]">
-            EXPORT DATA
-          </button>
+          <div class="flex items-center gap-4 w-full md:w-auto">
+              <app-profile-header></app-profile-header>
+              <button (click)="exportCSV()" class="flex-1 md:flex-none px-5 py-2 md:px-6 md:py-3 bg-slate-800 border border-neon-blue/30 text-neon-blue text-sm md:text-base font-bold rounded-xl hover:bg-neon-blue hover:text-white transition-all shadow-[0_0_15px_rgba(0,114,255,0.2)] hover:shadow-[0_0_25px_rgba(0,114,255,0.5)]">
+                EXPORT DATA
+              </button>
+          </div>
         </header>
 
           <!-- Charts Section -->
@@ -110,10 +117,25 @@ export class DashboardComponent implements OnInit {
 
   @ViewChild('chartContainer') chartContainer!: ElementRef;
 
-  constructor(private apiService: ApiService) { }
+  constructor(
+    private apiService: ApiService,
+    private authService: AuthService
+  ) { }
 
   ngOnInit() {
-    this.apiService.getHistory().subscribe({
+    if (this.authService.isAuthenticated()) {
+      this.loadHistory();
+    } else {
+      // If guest, try to get IP first to filter history
+      this.apiService.getIpInfo().subscribe({
+        next: (info) => this.loadHistory(info.ip),
+        error: () => this.loadHistory() // Fallback to empty if IP fails
+      });
+    }
+  }
+
+  loadHistory(ip?: string) {
+    this.apiService.getHistory(ip).subscribe({
       next: (data) => {
         this.history = data;
         this.processChartData(data);
