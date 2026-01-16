@@ -16,8 +16,47 @@ const io = new Server(server, {
   }
 });
 
-// Middleware
-app.use(cors());
+const helmet = require('helmet');
+const hpp = require('hpp');
+const rateLimit = require('express-rate-limit');
+
+// ... (socket.io setup)
+
+// Middleware implementation
+// 1. Set Security Headers
+app.use(helmet());
+
+// 2. Prevent HTTP Parameter Pollution
+app.use(hpp());
+
+// 3. Rate Limiting: 1000 requests per 10 minutes
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 1000,
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/api', limiter);
+
+// 4. CORS Setup
+const allowedOrigins = [
+  'http://localhost:4200',                 // Local Dev
+  'http://localhost:4000',                 // Local Dev
+  'https://speedtester-six.vercel.app'     // Production Frontend
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 
 // DB Connection

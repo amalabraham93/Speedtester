@@ -5,6 +5,7 @@ import { SpeedTestService, TestState } from '../../services/speed-test.service';
 import { GaugeComponent } from '../gauge/gauge.component';
 import { BackgroundComponent } from '../background/background.component';
 import { ApiService } from '../../services/api.service';
+import { SeoService } from '../../services/seo.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -12,7 +13,7 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [CommonModule, GaugeComponent, BackgroundComponent],
   template: `
-    <div class="min-h-screen relative overflow-hidden flex flex-col items-center justify-center p-4">
+    <div class="min-h-screen relative overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center p-4">
       <!-- Interactive Particle Background -->
       <app-background></app-background>
 
@@ -141,10 +142,17 @@ export class HomeComponent implements OnInit, OnDestroy {
   constructor(
     private speedService: SpeedTestService,
     private apiService: ApiService,
-    private router: Router
+    private router: Router,
+    private seoService: SeoService
   ) { }
 
   ngOnInit() {
+    this.seoService.updateMeta({
+      title: 'SpeedTrack - Ultimate Speed Test',
+      description: 'Test your internet speed with cyber precision. Analyze latency, jitter, download, and upload speeds with our futuristic tool.',
+      keywords: 'internet speed test, bandwidth test, wifi speed, ping test, jitter test, speedtrack'
+    });
+
     this.ipSub = this.apiService.getIpInfo().subscribe({
       next: (data) => {
         this.ipInfo = data;

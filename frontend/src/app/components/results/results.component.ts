@@ -3,13 +3,15 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { BackgroundComponent } from '../background/background.component';
 import { QualityService } from '../../services/quality.service';
+import { SeoService } from '../../services/seo.service';
+import { ImageGenService } from '../../services/image-gen.service';
 
 @Component({
   selector: 'app-results',
   standalone: true,
   imports: [CommonModule, BackgroundComponent],
   template: `
-    <div class="min-h-screen bg-slate-900 p-6 flex flex-col items-center justify-center relative overflow-hidden">
+    <div class="min-h-screen bg-slate-900 p-6 flex flex-col items-center justify-center relative overflow-y-auto overflow-x-hidden">
       <!-- Interactive Particle Background -->
       <app-background></app-background>
 
@@ -17,12 +19,14 @@ import { QualityService } from '../../services/quality.service';
       <div class="absolute top-0 left-0 right-0 h-96 bg-neon-blue opacity-10 blur-3xl rounded-full pointer-events-none"></div>
       <div class="absolute bottom-10 right-10 w-64 h-64 bg-neon-cyan opacity-5 blur-3xl rounded-full animate-pulse pointer-events-none"></div>
 
-      <div class="max-w-4xl w-full z-10 relative">
+      <div class="max-w-4xl w-full z-10 relative my-10">
         <!-- Header -->
         <h2 class="text-2xl md:text-4xl font-display font-bold text-white mb-6 md:mb-8 text-center tracking-widest drop-shadow-md">TEST RESULTS</h2>
         
         <!-- Main Stats Card -->
-        <div class="glass-card mb-6 md:mb-8 p-6 md:p-10 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-center shadow-[0_0_50px_rgba(15,23,42,0.5)] bg-slate-800/80 backdrop-blur-xl rounded-2xl md:rounded-3xl border border-slate-700">
+        <div id="result-card" class="glass-card mb-6 md:mb-8 p-6 md:p-10 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-center shadow-[0_0_50px_rgba(15,23,42,0.5)] bg-slate-800/80 backdrop-blur-xl rounded-2xl md:rounded-3xl border border-slate-700">
+
+
            <div class="relative group border-b md:border-b-0 md:border-r border-slate-700 pb-4 md:pb-0">
              <h3 class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 md:mb-2">Download</h3>
              <p class="text-4xl md:text-5xl font-display font-bold text-white group-hover:text-neon-cyan transition-colors duration-300 drop-shadow-[0_0_10px_rgba(0,242,254,0.3)]">
@@ -147,6 +151,10 @@ import { QualityService } from '../../services/quality.service';
 
         <!-- Sharing Actions -->
         <div class="mt-8 flex flex-wrap justify-center gap-4">
+          <button (click)="shareResult()" class="px-8 py-3 bg-slate-800 text-slate-300 rounded-xl font-bold font-display tracking-wide hover:bg-slate-700 transition border border-slate-700 hover:text-white flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+            SHARE IMAGE
+          </button>
           <button (click)="goToDashboard()" class="px-8 py-3 bg-slate-800 text-slate-300 rounded-xl font-bold font-display tracking-wide hover:bg-slate-700 transition border border-slate-700 hover:text-white">
             VIEW FULL HISTORY
           </button>
@@ -172,7 +180,9 @@ export class ResultsComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private qualityService: QualityService
+    private qualityService: QualityService,
+    private seoService: SeoService,
+    private imageGenService: ImageGenService
   ) {
     const nav = this.router.getCurrentNavigation();
     if (nav?.extras.state && nav.extras.state['result']) {
@@ -192,6 +202,25 @@ export class ResultsComponent implements OnInit {
       this.result.ping || 0,
       this.result.jitter || 0
     );
+
+    // Update SEO
+    this.seoService.updateMeta({
+      title: `My Speed: ${this.result.downloadSpeed} Mbps | SpeedTrack`,
+      description: `I just hit ${this.result.downloadSpeed} Mbps Download & ${this.result.uploadSpeed} Mbps Upload on SpeedTrack! Test your internet speed now.`,
+      keywords: 'speed test results, internet speed, speedtrack score'
+    });
+  }
+
+  async shareResult() {
+    const element = document.getElementById('result-card'); // Need to ID the card
+    if (element) {
+      try {
+        const dataUrl = await this.imageGenService.generateResultImage(element);
+        this.imageGenService.downloadImage(dataUrl, `speedtrack-result-${Date.now()}.png`);
+      } catch (err) {
+        console.error('Share failed', err);
+      }
+    }
   }
 
   retry() {
