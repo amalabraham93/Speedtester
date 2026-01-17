@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
+import { SocialAuthService } from '@abacritt/angularx-social-login';
 
 export interface User {
     id: string;
@@ -23,9 +24,24 @@ export class AuthService {
     constructor(
         private http: HttpClient,
         private router: Router,
-        @Inject(PLATFORM_ID) private platformId: Object
+        @Inject(PLATFORM_ID) private platformId: Object,
+        private socialAuthService: SocialAuthService
     ) {
         this.loadUser();
+    }
+
+    // ... (rest of methods)
+
+    logout() {
+        if (isPlatformBrowser(this.platformId)) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+
+            // Force Google SignOut to prevent auto-login next time
+            this.socialAuthService.signOut().catch(err => console.log('Social Signout Error', err));
+        }
+        this.currentUserSubject.next(null);
+        this.router.navigate(['/']);
     }
 
     private loadUser() {
@@ -54,15 +70,6 @@ export class AuthService {
         return this.http.post(`${this.apiUrl}/google`, { token: idToken }).pipe(
             tap((res: any) => this.setSession(res))
         );
-    }
-
-    logout() {
-        if (isPlatformBrowser(this.platformId)) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-        }
-        this.currentUserSubject.next(null);
-        this.router.navigate(['/']);
     }
 
     private setSession(authResult: any) {

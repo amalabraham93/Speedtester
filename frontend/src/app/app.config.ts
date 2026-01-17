@@ -21,7 +21,11 @@ export const appConfig: ApplicationConfig = {
           {
             id: GoogleLoginProvider.PROVIDER_ID,
             provider: new GoogleLoginProvider(
-              '997836995811-jcr6ik3ijuimkg70hpj5n83hdqmbanmt.apps.googleusercontent.com' // Replace with actual ID
+              '997836995811-ideb299q6spjr6ko44kq5qe6530j6nqb.apps.googleusercontent.com', // Replace with actual ID
+              {
+                oneTapEnabled: false,
+                prompt: 'select_account'
+              }
             )
           }
         ],

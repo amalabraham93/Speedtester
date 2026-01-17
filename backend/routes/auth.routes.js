@@ -74,12 +74,13 @@ router.post('/login', async (req, res) => {
 // @access  Public
 router.post('/google', async (req, res) => {
     const { token } = req.body;
-
     try {
         const ticket = await client.verifyIdToken({
             idToken: token,
             audience: process.env.GOOGLE_CLIENT_ID
         });
+
+
         const { name, email, picture, sub } = ticket.getPayload();
 
         let user = await User.findOne({ email });
@@ -107,7 +108,16 @@ router.post('/google', async (req, res) => {
 
     } catch (err) {
         console.error('Google Auth Error:', err);
-        res.status(401).send('Google authentication failed');
+        // Temporarily expose the error details to the frontend to help debug
+        // WARNING: Remove this before final production release!
+        res.status(401).json({
+            msg: 'Google authentication failed',
+            error: err.message,
+
+            // Helpful debugging info:
+            backend_client_id: process.env.GOOGLE_CLIENT_ID ?
+                `...${process.env.GOOGLE_CLIENT_ID.slice(-6)}` : 'UNDEFINED', // Show last 6 chars only
+        });
     }
 });
 
