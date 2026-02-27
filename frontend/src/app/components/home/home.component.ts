@@ -200,6 +200,11 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   startTest() {
+    // Re-fetch IP info if it failed initially
+    if (!this.ipInfo.ip) {
+      this.apiService.getIpInfo().subscribe(data => this.ipInfo = data);
+    }
+
     // Prevent multiple subs
     if (this.testSub) this.testSub.unsubscribe();
 

@@ -102,7 +102,9 @@ export class GaugeComponent implements OnChanges, AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     if (this.isBrowser) {
-      this.animate();
+      setTimeout(() => {
+        this.animate();
+      }, 0);
     }
   }
 

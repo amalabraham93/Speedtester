@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -8,38 +8,56 @@ import { environment } from '../../environments/environment';
     providedIn: 'root'
 })
 export class ApiService {
-    private apiUrl = environment.apiUrl; // e.g., http://localhost:5000/api
+    private apiUrl = environment.apiUrl;
 
     constructor(private http: HttpClient) { }
 
-    // Utils
     getIpInfo(): Observable<any> {
-        // Use our backend proxy to avoid CORS
         return this.http.get(`${this.apiUrl}/test/ip`).pipe(
             catchError(error => {
-                console.warn('Backend IP proxy failed, trying direct fallback', error);
-                // Fallback and map to expected structure
+                console.warn('Backend IP proxy failed, trying direct browser-side fallbacks', error);
                 return new Observable(observer => {
+                    // Try ipwho.is first
                     fetch('https://ipwho.is/')
                         .then(res => res.json())
                         .then(data => {
-                            observer.next({
-                                ip: data.ip,
-                                city: data.city,
-                                region: data.region,
-                                country_name: data.country,
-                                org: data.connection?.isp || 'Unknown ISP',
-                                asn: data.connection?.asn
-                            });
-                            observer.complete();
+                            if (data.success) {
+                                console.log('Frontend IP detection succeeded via ipwho.is');
+                                observer.next({
+                                    ip: data.ip,
+                                    city: data.city,
+                                    region: data.region,
+                                    country_name: data.country,
+                                    org: data.connection?.isp || data.connection?.org || 'Standard ISP',
+                                    asn: data.connection?.asn
+                                });
+                                observer.complete();
+                            } else {
+                                throw new Error('ipwho info unsuccessful');
+                            }
                         })
-                        .catch(err => observer.error(err));
+                        .catch(err => {
+                            console.warn('Final fallback: ipify');
+                            fetch('https://api.ipify.org?format=json')
+                                .then(res => res.json())
+                                .then(data => {
+                                    observer.next({
+                                        ip: data.ip,
+                                        city: 'Network Edge',
+                                        org: 'Detected Provider'
+                                    });
+                                    observer.complete();
+                                })
+                                .catch(errFinal => {
+                                    console.error('All IP fallbacks failed', errFinal);
+                                    observer.error(errFinal);
+                                });
+                        });
                 });
             })
         );
     }
 
-    // Auth
     register(userData: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/auth/register`, userData);
     }
@@ -48,7 +66,6 @@ export class ApiService {
         return this.http.post(`${this.apiUrl}/auth/login`, credentials);
     }
 
-    // Tests
     saveTestResult(result: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/test/save`, result);
     }
@@ -65,7 +82,6 @@ export class ApiService {
         return this.http.get<any[]>(`${this.apiUrl}/test/user/${userId}`);
     }
 
-    // Outages
     getOutages(): Observable<any[]> {
         return this.http.get<any[]>(`${this.apiUrl}/outage`);
     }

@@ -97,31 +97,44 @@ router.post('/upload', (req, res) => {
 
 // Proxy IP Endpoint to avoid CORS
 router.get('/ip', async (req, res) => {
-    try {
-        // Dynamic import for fetch (node 18+) or use axios if available. 
-        // Using native fetch since Node 18+ is likely used.
-        const response = await fetch('https://ipapi.co/json/');
-        if (!response.ok) throw new Error('IP API Error');
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error('Primary IP API failed:', error.message);
-        try {
-            // Fallback to ipwho.is
-            const fallback = await fetch('https://ipwho.is/');
-            const data = await fallback.json();
+    const headers = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' };
 
-            // Normalize to match ipapi.co structure
-            res.json({
-                ip: data.ip,
-                city: data.city,
-                region: data.region,
-                country_name: data.country,
-                org: data.connection?.isp || data.connection?.org || 'Unknown ISP',
-                asn: data.connection?.asn
-            });
+    try {
+        // Try ipwho.is first
+        const response = await fetch('https://ipwho.is/', { headers });
+        const data = await response.json();
+
+        if (!data.success) throw new Error('ipwho.is failed');
+
+        res.json({
+            ip: data.ip,
+            city: data.city,
+            region: data.region,
+            country_name: data.country,
+            org: (data.connection && (data.connection.isp || data.connection.org)) || 'Standard ISP',
+            asn: data.connection ? data.connection.asn : null
+        });
+    } catch (error) {
+        try {
+            // Fallback to ipapi.co
+            const response = await fetch('https://ipapi.co/json/', { headers });
+            const data = await response.json();
+            if (data.error || !response.ok) throw new Error('ipapi.co failed');
+            res.json(data);
         } catch (fbError) {
-            res.status(500).json({ error: 'Failed to fetch IP info' });
+            try {
+                // Final effort: Just get the IP from ipify
+                const response = await fetch('https://api.ipify.org?format=json', { headers });
+                const data = await response.json();
+                res.json({
+                    ip: data.ip,
+                    city: 'Local Node',
+                    org: 'Detected ISP'
+                });
+            } catch (lastError) {
+                console.error('All IP Detection services failed');
+                res.status(500).json({ error: 'Failed to fetch IP info' });
+            }
         }
     }
 });
