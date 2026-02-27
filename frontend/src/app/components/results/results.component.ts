@@ -204,8 +204,8 @@ export class ResultsComponent implements OnInit {
     );
 
     // Update SEO
-    this.seoService.updateMeta({
-      title: `My Speed: ${this.result.downloadSpeed} Mbps | SpeedTrack`,
+    this.seoService.updateSeoData({
+      title: `My Speed: ${this.result.downloadSpeed} Mbps`,
       description: `I just hit ${this.result.downloadSpeed} Mbps Download & ${this.result.uploadSpeed} Mbps Upload on SpeedTrack! Test your internet speed now.`,
       keywords: 'speed test results, internet speed, speedtrack score'
     });
