@@ -1,56 +1,94 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, RendererFactory2, ViewEncapsulation } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
-import { isPlatformBrowser } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { environment } from '../../environments/environment';
+
+export interface SeoData {
+    title?: string;
+    description?: string;
+    keywords?: string;
+    ogImage?: string;
+    ogType?: string;
+    twitterCard?: string;
+    robots?: string;
+    canonical?: string;
+}
 
 @Injectable({
     providedIn: 'root'
 })
 export class SeoService {
+    private renderer;
 
     constructor(
         private title: Title,
         private meta: Meta,
+        private rendererFactory: RendererFactory2,
+        @Inject(DOCUMENT) private document: Document,
         @Inject(PLATFORM_ID) private platformId: Object
-    ) { }
+    ) {
+        this.renderer = this.rendererFactory.createRenderer(null, {
+            id: 'seo-renderer',
+            encapsulation: ViewEncapsulation.None,
+            styles: [],
+            data: {}
+        });
+    }
 
-    updateMeta(config: {
-        title?: string;
-        description?: string;
-        image?: string;
-        url?: string;
-        keywords?: string;
-    }) {
-        // defaults
-        const title = config.title ? `${config.title} | SpeedTrack` : 'SpeedTrack - Ultimate Internet Speed Test';
-        const description = config.description || 'Test your internet speed with SpeedTrack. Deep analysis of ping, jitter, download, and upload speeds with futuristic visualization.';
-        const image = config.image || 'https://speedtester-six.vercel.app/assets/og-image.jpg'; // Needs to be absolute
-        const url = config.url || 'https://speedtester-six.vercel.app/';
-        const keywords = config.keywords || 'speed test, internet speed, bandwidth test, ping, jitter, network analysis';
+    updateSeoData(data: SeoData) {
+        const siteName = 'SpeedTrack';
+        const fullTitle = data.title ? `${data.title} | ${siteName}` : siteName;
 
-        // Update Title
-        this.title.setTitle(title);
+        // Title
+        this.title.setTitle(fullTitle);
 
-        // Update Meta Tags
-        this.meta.updateTag({ name: 'description', content: description });
-        this.meta.updateTag({ name: 'keywords', content: keywords });
-        this.meta.updateTag({ name: 'robots', content: 'index, follow' });
+        // Standard Meta Tags
+        if (data.description) {
+            this.meta.updateTag({ name: 'description', content: data.description });
+        }
+        if (data.keywords) {
+            this.meta.updateTag({ name: 'keywords', content: data.keywords });
+        }
+        if (data.robots) {
+            this.meta.updateTag({ name: 'robots', content: data.robots });
+        }
 
-        // Open Graph
-        this.meta.updateTag({ property: 'og:type', content: 'website' });
-        this.meta.updateTag({ property: 'og:title', content: title });
-        this.meta.updateTag({ property: 'og:description', content: description });
-        this.meta.updateTag({ property: 'og:image', content: image });
-        this.meta.updateTag({ property: 'og:url', content: url });
-        this.meta.updateTag({ property: 'og:site_name', content: 'SpeedTrack' });
+        // Open Graph / Facebook
+        this.meta.updateTag({ property: 'og:site_name', content: siteName });
+        this.meta.updateTag({ property: 'og:title', content: fullTitle });
+        if (data.description) {
+            this.meta.updateTag({ property: 'og:description', content: data.description });
+        }
+        this.meta.updateTag({ property: 'og:type', content: data.ogType || 'website' });
+        this.meta.updateTag({ property: 'og:image', content: data.ogImage || `${environment.baseUrl}/assets/og-image.png` });
 
-        // Twitter Card
-        this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
-        this.meta.updateTag({ name: 'twitter:title', content: title });
-        this.meta.updateTag({ name: 'twitter:description', content: description });
-        this.meta.updateTag({ name: 'twitter:image', content: image });
+        // Twitter
+        this.meta.updateTag({ name: 'twitter:card', content: data.twitterCard || 'summary_large_image' });
+        this.meta.updateTag({ name: 'twitter:title', content: fullTitle });
+        if (data.description) {
+            this.meta.updateTag({ name: 'twitter:description', content: data.description });
+        }
+        this.meta.updateTag({ name: 'twitter:image', content: data.ogImage || `${environment.baseUrl}/assets/og-image.png` });
 
-        // JSON-LD (Only for SSR essentially, but good to have)
-        // We would inject this into head if we had direct document access, 
-        // but typical Angular Meta service interaction is enough for basic crawlers.
+        // Canonical
+        this.updateCanonicalUrl(data.canonical);
+    }
+
+    private updateCanonicalUrl(url?: string) {
+        // Remove existing canonical tag
+        const existingCanonical = this.document.querySelector('link[rel="canonical"]');
+        if (existingCanonical) {
+            this.renderer.removeChild(this.document.head, existingCanonical);
+        }
+
+        // Use current URL if none provided
+        const canonicalUrl = url || (isPlatformBrowser(this.platformId)
+            ? window.location.href.split('?')[0]
+            : `${environment.baseUrl}`);
+
+        const link: HTMLLinkElement = this.renderer.createElement('link');
+        this.renderer.setAttribute(link, 'rel', 'canonical');
+        this.renderer.setAttribute(link, 'href', canonicalUrl);
+        this.renderer.appendChild(this.document.head, link);
     }
 }

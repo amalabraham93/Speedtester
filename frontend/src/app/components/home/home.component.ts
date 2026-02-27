@@ -9,13 +9,22 @@ import { SeoService } from '../../services/seo.service';
 import { Subscription } from 'rxjs';
 
 import { ProfileHeaderComponent } from '../auth/profile-header.component';
+import { SeoContentComponent } from '../seo-content/seo-content.component';
+import { FooterComponent } from '../footer/footer.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, GaugeComponent, BackgroundComponent, ProfileHeaderComponent],
+  imports: [
+    CommonModule,
+    GaugeComponent,
+    BackgroundComponent,
+    ProfileHeaderComponent,
+    SeoContentComponent,
+    FooterComponent
+  ],
   template: `
-    <div class="min-h-screen relative overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center p-4">
+    <div class="min-h-screen relative overflow-y-auto overflow-x-hidden flex flex-col items-center p-4">
       <!-- Interactive Particle Background -->
       <app-background></app-background>
 
@@ -23,99 +32,97 @@ import { ProfileHeaderComponent } from '../auth/profile-header.component';
       <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-neon-blue/10 blur-[100px] rounded-full animate-pulse-slow pointer-events-none"></div>
       <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon-purple/10 blur-[100px] rounded-full animate-float pointer-events-none"></div>
 
-      <!-- Header -->
-      <div class="flex justify-between w-full max-w-5xl mb-12 items-center z-10 animate-fade-in-down">
-        <div class="flex items-center gap-3 group cursor-pointer hover:scale-105 transition-transform">
-           <div class="w-12 h-12 rounded-xl bg-slate-900/80 border border-slate-700/50 flex items-center justify-center shadow-[0_0_20px_rgba(0,224,255,0.1)] group-hover:shadow-[0_0_25px_rgba(0,224,255,0.3)] transition-all duration-300 backdrop-blur-md">
-               <svg class="w-6 h-6 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <!-- Main Content Wrapper (Centered Gauge Section) -->
+      <div class="min-h-[90vh] flex flex-col items-center justify-center w-full">
+        <!-- Header -->
+        <div class="flex justify-between w-full max-w-5xl mb-12 items-center z-10 animate-fade-in-down">
+          <div class="flex items-center gap-3 group cursor-pointer hover:scale-105 transition-transform">
+             <div class="w-12 h-12 rounded-xl bg-slate-900/80 border border-slate-700/50 flex items-center justify-center shadow-[0_0_20px_rgba(0,224,255,0.1)] group-hover:shadow-[0_0_25px_rgba(0,224,255,0.3)] transition-all duration-300 backdrop-blur-md">
+                 <svg class="w-6 h-6 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+             </div>
+              <div>
+                  <span class="block text-white font-display font-bold tracking-[0.2em] text-xl drop-shadow-md">SPEEDTRACK</span>
+                  <span class="block text-[8px] text-neon-cyan tracking-[0.4em] uppercase opacity-70">Deep Analysis Protocol</span>
+              </div>
            </div>
-            <div>
-                <span class="block text-white font-display font-bold tracking-[0.2em] text-xl drop-shadow-md">SPEEDTRACK</span>
-                <span class="block text-[8px] text-neon-cyan tracking-[0.4em] uppercase opacity-70">Deep Analysis Protocol</span>
-            </div>
+           <div class="flex items-center gap-4">
+               <app-profile-header></app-profile-header>
+               <div class="hidden md:block px-6 py-2 rounded-full bg-slate-900/40 border border-neon-cyan/20 backdrop-blur-md text-xs font-mono text-neon-cyan tracking-wider shadow-[0_0_15px_rgba(0,224,255,0.05)]">
+                  <span class="opacity-70">CONN:</span> {{ ipInfo.city || 'SCANNING...' }} <span class="mx-2 text-slate-600">|</span> <span class="opacity-70">IP:</span> {{ ipInfo.ip || '---.---.---.---' }}
+               </div>
+           </div>
          </div>
-         <div class="flex items-center gap-4">
-             <app-profile-header></app-profile-header>
-             <div class="hidden md:block px-6 py-2 rounded-full bg-slate-900/40 border border-neon-cyan/20 backdrop-blur-md text-xs font-mono text-neon-cyan tracking-wider shadow-[0_0_15px_rgba(0,224,255,0.05)]">
-                <span class="opacity-70">CONN:</span> {{ ipInfo.city || 'SCANNING...' }} <span class="mx-2 text-slate-600">|</span> <span class="opacity-70">IP:</span> {{ ipInfo.ip || '---.---.---.---' }}
-             </div>
-         </div>
-       </div>
 
-      <!-- Main Gauge Card (Deep Glass) -->
-      <div class="bg-slate-900/60 backdrop-blur-[12px] p-12 rounded-[3.5rem] border border-neon-cyan/10 shadow-[0_0_60px_rgba(0,0,0,0.4)] w-full max-w-xl text-center relative z-10 transition-all duration-500 hover:border-neon-cyan/30 hover:shadow-[0_0_50px_rgba(0,224,255,0.15)] group">
-        
-        <!-- Decoration Lines -->
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[1px] bg-gradient-to-r from-transparent via-neon-cyan to-transparent opacity-30"></div>
-        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-[1px] bg-gradient-to-r from-transparent via-neon-cyan to-transparent opacity-30"></div>
-        
-        <!-- Gauge Area -->
-        <div class="mb-8 relative flex justify-center -mt-8">
-           <app-gauge 
-             [value]="currentSpeed" 
-             [max]="currentMax" 
-             [label]="state.phase === 'idle' ? 'SYSTEM READY' : state.phase" 
-             [unit]="state.phase === 'ping' ? 'ms' : 'Mbps'">
-           </app-gauge>
+        <!-- Main Gauge Card (Deep Glass) -->
+        <div class="bg-slate-900/60 backdrop-blur-[12px] p-12 rounded-[3.5rem] border border-neon-cyan/10 shadow-[0_0_60px_rgba(0,0,0,0.4)] w-full max-w-xl text-center relative z-10 transition-all duration-500 hover:border-neon-cyan/30 hover:shadow-[0_0_50px_rgba(0,224,255,0.15)] group">
+          <!-- Decoration Lines -->
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[1px] bg-gradient-to-r from-transparent via-neon-cyan to-transparent opacity-30"></div>
+          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-[1px] bg-gradient-to-r from-transparent via-neon-cyan to-transparent opacity-30"></div>
+          
+          <!-- Gauge Area -->
+          <div class="mb-8 relative flex justify-center -mt-8">
+             <app-gauge 
+               [value]="currentSpeed" 
+               [max]="currentMax" 
+               [label]="state.phase === 'idle' ? 'SYSTEM READY' : state.phase" 
+               [unit]="state.phase === 'ping' ? 'ms' : 'Mbps'">
+             </app-gauge>
+          </div>
+
+          <!-- Real-time Stats Grid -->
+          <div class="grid grid-cols-2 gap-4 mb-10">
+              <div class="text-left p-5 rounded-3xl bg-slate-900/50 border border-white/5 transition-all duration-300 hover:bg-slate-800/60 hover:border-neon-cyan/20">
+                  <span class="block text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2 pl-1">Latency</span>
+                  <span class="text-3xl font-display font-medium text-white tracking-tight">{{ state.ping | number:'1.0-0' }}<span class="text-xs font-sans font-bold text-slate-500 ml-1">ms</span></span>
+              </div>
+              
+              <div class="text-right p-5 rounded-3xl bg-slate-900/50 border border-white/5 transition-all duration-300 hover:bg-slate-800/60 hover:border-neon-cyan/20">
+                  <span class="block text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2 pr-1">Bandwidth</span>
+                  <span class="text-3xl font-display font-medium text-white tracking-tight">{{ state.downloadSpeed | number:'1.1-1' }}<span class="text-xs font-sans font-bold text-slate-500 ml-1">Mbps</span></span>
+              </div>
+          </div>
+
+          <!-- Action / Progress -->
+          <div *ngIf="state.phase === 'idle' || state.phase === 'complete'" class="relative group/btn">
+               <div class="absolute -inset-1 bg-gradient-to-r from-neon-blue to-neon-cyan rounded-2xl blur opacity-20 group-hover/btn:opacity-40 transition duration-500"></div>
+               <button (click)="startTest()" 
+                  class="relative w-full py-6 bg-gradient-to-r from-slate-900 to-slate-800 border border-neon-cyan/30 text-white rounded-2xl font-display font-bold text-lg tracking-[0.2em] shadow-2xl transition-all duration-300 overflow-hidden group-hover/btn:border-neon-cyan/50 active:scale-[0.98]">
+                  <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/btn:animate-scan"></div>
+                  <span class="relative z-10 group-hover/btn:text-neon-cyan transition-colors">
+                      {{ state.phase === 'complete' ? 'RESTART DIAGNOSTIC' : 'INITIATE SCAN' }}
+                  </span>
+              </button>
+          </div>
+
+          <!-- Progress Bar (Scanning) -->
+          <div *ngIf="state.phase !== 'idle' && state.phase !== 'complete'" class="relative pt-2">
+               <div class="flex justify-between text-[10px] font-mono text-neon-cyan/70 uppercase tracking-widest mb-3">
+                  <span class="animate-pulse">Phase: {{ state.phase }}</span>
+                  <span>{{ state.progress | number:'1.0-0' }}%</span>
+               </div>
+               <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden relative border border-white/5">
+                   <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-neon-blue via-neon-cyan to-neon-teal transition-all duration-200 ease-out shadow-[0_0_15px_rgba(0,224,255,0.6)]" [style.width.%]="state.progress"></div>
+                   <div class="absolute top-0 bottom-0 w-20 bg-gradient-to-r from-transparent via-white/40 to-transparent blur-sm animate-scan" style="left: -20%;"></div>
+               </div>
+          </div>
         </div>
 
-        <!-- Real-time Stats Grid -->
-        <div class="grid grid-cols-2 gap-4 mb-10">
-            <div class="text-left p-5 rounded-3xl bg-slate-900/50 border border-white/5 transition-all duration-300 hover:bg-slate-800/60 hover:border-neon-cyan/20">
-                <span class="block text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2 pl-1">Latency</span>
-                <span class="text-3xl font-display font-medium text-white tracking-tight">{{ state.ping | number:'1.0-0' }}<span class="text-xs font-sans font-bold text-slate-500 ml-1">ms</span></span>
-            </div>
-            
-            <div class="text-right p-5 rounded-3xl bg-slate-900/50 border border-white/5 transition-all duration-300 hover:bg-slate-800/60 hover:border-neon-cyan/20">
-                <span class="block text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2 pr-1">Bandwidth</span>
-                <span class="text-3xl font-display font-medium text-white tracking-tight">{{ state.downloadSpeed | number:'1.1-1' }}<span class="text-xs font-sans font-bold text-slate-500 ml-1">Mbps</span></span>
-            </div>
+        <!-- ISP Status Badge -->
+        <div class="mt-12 z-10">
+          <div class="flex items-center gap-2 px-8 py-3 rounded-full bg-slate-800/40 border border-white/5 text-slate-400 text-[10px] font-mono tracking-widest uppercase hover:text-neon-cyan transition-colors group cursor-pointer">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 group-hover:bg-neon-cyan animate-pulse shadow-[0_0_10px_currentColor]"></span>
+            <span>PROVIDER: {{ ipInfo.org || 'AUTODETECTING...' }}</span>
+          </div>
         </div>
-
-        <!-- Action / Progress -->
-        <div *ngIf="state.phase === 'idle' || state.phase === 'complete'" class="relative group/btn">
-             <!-- Button Glow -->
-             <div class="absolute -inset-1 bg-gradient-to-r from-neon-blue to-neon-cyan rounded-2xl blur opacity-20 group-hover/btn:opacity-40 transition duration-500"></div>
-             
-             <button (click)="startTest()" 
-                class="relative w-full py-6 bg-gradient-to-r from-slate-900 to-slate-800 border border-neon-cyan/30 text-white rounded-2xl font-display font-bold text-lg tracking-[0.2em] shadow-2xl transition-all duration-300 overflow-hidden group-hover/btn:border-neon-cyan/50 active:scale-[0.98]">
-                
-                <!-- Hover Sweep -->
-                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/btn:animate-scan"></div>
-                
-                <span class="relative z-10 group-hover/btn:text-neon-cyan transition-colors">
-                    {{ state.phase === 'complete' ? 'RESTART DIAGNOSTIC' : 'INITIATE SCAN' }}
-                </span>
-            </button>
-        </div>
-
-        <!-- Progress Bar (Scanning) -->
-        <div *ngIf="state.phase !== 'idle' && state.phase !== 'complete'" class="relative pt-2">
-             <div class="flex justify-between text-[10px] font-mono text-neon-cyan/70 uppercase tracking-widest mb-3">
-                <span class="animate-pulse">Phase: {{ state.phase }}</span>
-                <span>{{ state.progress | number:'1.0-0' }}%</span>
-             </div>
-             
-             <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden relative border border-white/5">
-                 <!-- Gradient Bar -->
-                 <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-neon-blue via-neon-cyan to-neon-teal transition-all duration-200 ease-out shadow-[0_0_15px_rgba(0,224,255,0.6)]" [style.width.%]="state.progress"></div>
-                 
-                 <!-- Scanning Light -->
-                 <div class="absolute top-0 bottom-0 w-20 bg-gradient-to-r from-transparent via-white/40 to-transparent blur-sm animate-scan" style="left: -20%;"></div>
-             </div>
-        </div>
-
       </div>
-      
-      <!-- Footer Info -->
-      <div class="mt-16 flex items-center gap-6 text-slate-600 text-[10px] font-mono tracking-widest uppercase">
-         <div class="flex items-center gap-2 hover:text-neon-cyan transition-colors cursor-pointer group">
-             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 group-hover:bg-neon-cyan shadow-[0_0_5px_currentColor]"></span>
-             <span>{{ ipInfo.org || 'PROVIDER: AUTO' }}</span>
-         </div>
-         <span class="opacity-30">|</span>
-         <span class="hover:text-white transition-colors cursor-pointer">ENCRYPTED: TLS 1.3</span>
-      </div>
+
+      <!-- SEO Content Section (Rich Content Layer) -->
+      @defer (on timer(1s)) {
+        <app-seo-content class="z-10 w-full"></app-seo-content>
+      }
+
+      <!-- Footer Section -->
+      <app-footer class="w-full"></app-footer>
 
       <!-- Saving Overlay -->
       <div *ngIf="isSaving" class="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex flex-col items-center justify-center animate-fade-in">
@@ -152,12 +159,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.seoService.updateMeta({
-      title: 'SpeedTrack - Ultimate Speed Test',
-      description: 'Test your internet speed with cyber precision. Analyze latency, jitter, download, and upload speeds with our futuristic tool.',
-      keywords: 'internet speed test, bandwidth test, wifi speed, ping test, jitter test, speedtrack'
-    });
-
+    this.injectWebSchema();
     this.ipSub = this.apiService.getIpInfo().subscribe({
       next: (data) => {
         this.ipInfo = data;
@@ -166,6 +168,30 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.ipInfo = { city: 'Unknown', org: 'Standard' };
       }
     });
+  }
+
+  private injectWebSchema() {
+    if (typeof document === 'undefined') return; // Server-side handled by SeoService if needed, but injecting here for hydration-safe
+
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      'name': 'SpeedTrack',
+      'url': 'https://speedtrack.com',
+      'description': 'Real-time internet speed test with detailed analytics and outage monitoring.',
+      'applicationCategory': 'Utility',
+      'operatingSystem': 'Any',
+      'offers': {
+        '@type': 'Offer',
+        'price': '0',
+        'priceCurrency': 'USD'
+      }
+    };
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify(schema);
+    document.head.appendChild(script);
   }
 
   ngOnDestroy() {

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { SeoService } from './services/seo.service';
+import { filter, map, mergeMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -10,11 +11,23 @@ import { SeoService } from './services/seo.service';
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit {
-  title = 'frontend';
-
-  constructor(private seoService: SeoService) { }
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+    private seoService: SeoService
+  ) { }
 
   ngOnInit() {
-    this.seoService.updateMeta({}); // Set defaults
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      map(() => this.activatedRoute),
+      map(route => {
+        while (route.firstChild) route = route.firstChild;
+        return route;
+      }),
+      mergeMap(route => route.data)
+    ).subscribe(data => {
+      this.seoService.updateSeoData(data);
+    });
   }
 }

@@ -7,6 +7,11 @@ const { Server } = require('socket.io');
 const cron = require('node-cron');
 const outageMonitor = require('./cron/outage-monitor');
 
+const authRoutes = require('./routes/auth.routes');
+const testRoutes = require('./routes/test.routes');
+const outageRoutes = require('./routes/outage.routes');
+const blogRoutes = require('./routes/blog.routes');
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -84,6 +89,8 @@ app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/test', require('./routes/test.routes'));
 app.use('/api/payment', require('./routes/payment.routes'));
 app.use('/api/outage', require('./routes/outage.routes'));
+app.use('/api/blog', require('./routes/blog.routes'));
+app.use('/', require('./routes/seo.routes')); // For sitemap.xml and robots.txt at root
 
 // Cron Jobs
 cron.schedule('*/15 * * * *', () => {
